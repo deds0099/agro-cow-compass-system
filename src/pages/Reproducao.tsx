@@ -98,7 +98,7 @@ export default function Reproducao() {
                   className={`mt-2 ${getProgressColor(indicadores.taxaServico, 60)}`} 
                   value={indicadores.taxaServico} 
                 />
-                <p className="text-xs text-muted-foreground mt-1">Meta: > 60%</p>
+                <p className="text-xs text-muted-foreground mt-1">Meta: {`>`} 60%</p>
               </CardContent>
             </Card>
             
@@ -112,7 +112,7 @@ export default function Reproducao() {
                   className={`mt-2 ${getProgressColor(indicadores.taxaConcepcao, 50)}`} 
                   value={indicadores.taxaConcepcao} 
                 />
-                <p className="text-xs text-muted-foreground mt-1">Meta: > 50%</p>
+                <p className="text-xs text-muted-foreground mt-1">Meta: {`>`} 50%</p>
               </CardContent>
             </Card>
             
@@ -126,7 +126,7 @@ export default function Reproducao() {
                   className={`mt-2 ${getProgressColor(indicadores.taxaPrenhez, 30)}`} 
                   value={indicadores.taxaPrenhez} 
                 />
-                <p className="text-xs text-muted-foreground mt-1">Meta: > 30%</p>
+                <p className="text-xs text-muted-foreground mt-1">Meta: {`>`} 30%</p>
               </CardContent>
             </Card>
             
@@ -140,7 +140,7 @@ export default function Reproducao() {
                   className={`mt-2 ${getProgressColor(14-indicadores.intervaloPartos, 1)}`} 
                   value={(14-indicadores.intervaloPartos) * 10} 
                 />
-                <p className="text-xs text-muted-foreground mt-1">Meta: < 13 meses</p>
+                <p className="text-xs text-muted-foreground mt-1">Meta: {`<`} 13 meses</p>
               </CardContent>
             </Card>
             
@@ -154,7 +154,7 @@ export default function Reproducao() {
                   className={`mt-2 ${getProgressColor(100-indicadores.periodoServico, 10)}`} 
                   value={(100-indicadores.periodoServico) * 1.1} 
                 />
-                <p className="text-xs text-muted-foreground mt-1">Meta: < 90 dias</p>
+                <p className="text-xs text-muted-foreground mt-1">Meta: {`<`} 90 dias</p>
               </CardContent>
             </Card>
             
