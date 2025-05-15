@@ -39,9 +39,6 @@ export function SidebarNav() {
     { title: "Alertas", url: "/alertas", icon: CircleCheck },
   ];
 
-  // Determine if group should be expanded based on current path
-  const isInSection = (path: string) => currentPath.startsWith(path);
-
   // Get navigation class based on active state
   const getNavClass = ({ isActive }: { isActive: boolean }) => {
     return `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
@@ -53,12 +50,12 @@ export function SidebarNav() {
 
   return (
     <Sidebar
-      className={`h-screen border-r ${
+      className={`h-screen border-r bg-white shadow-sm ${
         collapsed ? "w-16" : "w-64"
       } transition-all duration-300`}
       collapsible="icon"
     >
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-4 border-b bg-white">
         {!collapsed && (
           <span className="text-xl font-bold text-farm-primary">FarmGest</span>
         )}
@@ -67,7 +64,7 @@ export function SidebarNav() {
         </SidebarTrigger>
       </div>
 
-      <SidebarContent className="p-2">
+      <SidebarContent className="p-2 bg-white">
         <SidebarGroup>
           <SidebarMenu>
             {menuItems.map((item) => (

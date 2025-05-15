@@ -7,7 +7,7 @@ import { Header } from "./Header";
 export function Layout({ children }: PropsWithChildren) {
   return (
     <SidebarProvider>
-      <div className="flex h-screen w-full">
+      <div className="flex h-screen w-full overflow-hidden bg-background">
         <SidebarNav />
         <div className="flex flex-col flex-1 overflow-hidden">
           <Header />
