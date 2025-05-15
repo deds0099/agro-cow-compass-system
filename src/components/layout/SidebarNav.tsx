@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -25,7 +25,8 @@ import {
 } from "lucide-react";
 
 export function SidebarNav() {
-  const { collapsed } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
+  const collapsed = state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -55,7 +56,7 @@ export function SidebarNav() {
       className={`h-screen border-r ${
         collapsed ? "w-16" : "w-64"
       } transition-all duration-300`}
-      collapsible
+      collapsible="icon"
     >
       <div className="flex items-center justify-between p-4 border-b">
         {!collapsed && (
