@@ -92,13 +92,16 @@ const Auth = () => {
   const onRegister = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // Using signUp with auto confirmation
+      const { error, data: authData } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
             name: data.name,
           },
+          // This line removes the email confirmation requirement
+          emailRedirectTo: window.location.origin,
         },
       });
 
@@ -106,7 +109,20 @@ const Auth = () => {
         throw error;
       }
 
-      toast.success("Cadastro realizado com sucesso! Verifique seu e-mail.");
+      // Check if the user was created successfully
+      if (authData?.user) {
+        toast.success("Cadastro realizado com sucesso!");
+        
+        // Automatically log in the user after registration
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        
+        if (!signInError) {
+          navigate("/");
+        }
+      }
     } catch (error) {
       console.error(error);
       toast.error("Falha ao criar conta. Tente novamente.");
