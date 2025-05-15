@@ -45,6 +45,18 @@ const registerSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+// Function to clean up Supabase auth state to prevent authentication issues
+const cleanupAuthState = () => {
+  // Remove standard auth tokens
+  localStorage.removeItem('supabase.auth.token');
+  // Remove all Supabase auth keys from localStorage
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+};
+
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -70,6 +82,16 @@ const Auth = () => {
   const onLogin = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
+      // Clean up existing auth state to prevent conflicts
+      cleanupAuthState();
+      
+      // Attempt to sign out globally before signing in
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -80,7 +102,9 @@ const Auth = () => {
       }
 
       toast.success("Login realizado com sucesso!");
-      navigate("/");
+      
+      // Use window.location.href for a full page refresh to ensure clean state
+      window.location.href = "/";
     } catch (error) {
       console.error(error);
       toast.error("Falha ao fazer login. Verifique suas credenciais.");
@@ -92,6 +116,9 @@ const Auth = () => {
   const onRegister = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
+      // Clean up existing auth state to prevent conflicts
+      cleanupAuthState();
+      
       // Using signUp with auto confirmation
       const { error, data: authData } = await supabase.auth.signUp({
         email: data.email,
@@ -113,14 +140,15 @@ const Auth = () => {
       if (authData?.user) {
         toast.success("Cadastro realizado com sucesso!");
         
-        // Automatically log in the user after registration
+        // Automatically log in the user after registration using window.location.href
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
         });
         
         if (!signInError) {
-          navigate("/");
+          // Use window.location.href for a full page refresh to ensure clean state
+          window.location.href = "/";
         }
       }
     } catch (error) {
