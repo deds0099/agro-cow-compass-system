@@ -19,4 +19,18 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Adiciona configuração para lidar com rotas do React Router
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+  // Configuração para redirecionar todas as rotas para index.html
+  preview: {
+    port: 8080,
+    strictPort: true,
+    host: true,
+  },
 }));

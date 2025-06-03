@@ -91,10 +91,21 @@ export default function Relatorios() {
 
       if (animaisError) throw animaisError;
 
+      // Carregar dados de reprodução
+      const { data: reproducao, error: reproducaoError } = await supabase
+        .from("reproducao")
+        .select("*")
+        .eq("user_id", user_id)
+        .gte("data_inseminacao", inicio.toISOString().split("T")[0])
+        .lte("data_inseminacao", fim.toISOString().split("T")[0])
+        .order("data_inseminacao", { ascending: true });
+
+      if (reproducaoError) throw reproducaoError;
+
       setDados({
         producao: producao || [],
         animais: animais || [],
-        reproducao: [], // TODO: Implementar carregamento de dados de reprodução
+        reproducao: reproducao || [],
       });
     } catch (error: any) {
       toast({
@@ -139,6 +150,15 @@ export default function Relatorios() {
         }));
       }
 
+      if (reportData.length === 0) {
+        toast({
+          title: "Nenhum dado encontrado",
+          description: "Não há dados para gerar o relatório no período selecionado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Gerar arquivo baseado no formato
       if (formatoExportacao === "pdf") {
         // Criar PDF usando jsPDF
@@ -158,7 +178,7 @@ export default function Relatorios() {
           key.replace(/_/g, ' ').toUpperCase()
         );
 
-        // Adicionar tabela
+        // Adicionar tabela usando autoTable
         autoTable(doc, {
           head: [headers],
           body: tableData,
@@ -179,7 +199,7 @@ export default function Relatorios() {
 
         // Salvar o PDF
         doc.save(`relatorio_${tipoRelatorio}_${new Date().toISOString().split('T')[0]}.pdf`);
-      } else {
+      } else if (formatoExportacao === "excel") {
         // Criar conteúdo CSV para Excel
         const headers = Object.keys(reportData[0] || {}).join(',');
         const rows = reportData.map(row => Object.values(row).join(','));
@@ -192,7 +212,7 @@ export default function Relatorios() {
         // Criar link de download
         const link = document.createElement('a');
         link.href = url;
-        link.download = `relatorio_${tipoRelatorio}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.setAttribute('download', `relatorio_${tipoRelatorio}_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
