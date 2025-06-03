@@ -18,6 +18,8 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/components/ui/use-toast";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 type Animal = Database["public"]["Tables"]["animais"]["Row"];
 type Producao = Database["public"]["Tables"]["producao"]["Row"];
@@ -105,20 +107,101 @@ export default function Relatorios() {
 
   const handleGerarRelatorio = async () => {
     try {
-      const { error } = await supabase
-        .from("relatorios")
-        .insert({
-          tipo: tipoRelatorio,
-          data_inicio: dataInicio?.toISOString().split("T")[0],
-          data_fim: dataFim?.toISOString().split("T")[0],
-          formato: formatoExportacao,
+      // Preparar dados para o relatório
+      let reportData = [];
+      if (tipoRelatorio === "producao") {
+        reportData = dados.producao.map(p => {
+          const animal = dados.animais.find(a => a.id === p.animal_id);
+          return {
+            data: formatDate(p.data),
+            animal: animal ? `${animal.numero} (${animal.raca})` : 'N/A',
+            periodo: p.periodo,
+            quantidade: `${p.quantidade} L`
+          };
+        });
+      } else if (tipoRelatorio === "reproducao") {
+        reportData = dados.reproducao.map(r => {
+          const animal = dados.animais.find(a => a.id === r.animal_id);
+          return {
+            animal: animal ? `${animal.numero} (${animal.raca})` : 'N/A',
+            data_inseminacao: formatDate(r.data_inseminacao),
+            data_prevista_parto: r.data_prevista_parto ? formatDate(r.data_prevista_parto) : 'N/A',
+            status: r.status
+          };
+        });
+      } else if (tipoRelatorio === "animais") {
+        reportData = dados.animais.map(a => ({
+          numero: a.numero,
+          raca: a.raca,
+          status: a.status,
+          data_nascimento: formatDate(a.data_nascimento),
+          data_proximo_parto: a.data_proximo_parto ? formatDate(a.data_proximo_parto) : 'N/A'
+        }));
+      }
+
+      // Gerar arquivo baseado no formato
+      if (formatoExportacao === "pdf") {
+        // Criar PDF usando jsPDF
+        const doc = new jsPDF();
+        
+        // Adicionar título
+        doc.setFontSize(16);
+        doc.text(`Relatório de ${tipoRelatorio.charAt(0).toUpperCase() + tipoRelatorio.slice(1)}`, 14, 15);
+        
+        // Adicionar período
+        doc.setFontSize(12);
+        doc.text(`Período: ${formatDate(dataInicio?.toISOString().split('T')[0] || '')} a ${formatDate(dataFim?.toISOString().split('T')[0] || '')}`, 14, 25);
+
+        // Preparar dados para a tabela
+        const tableData = reportData.map(row => Object.values(row));
+        const headers = Object.keys(reportData[0] || {}).map(key => 
+          key.replace(/_/g, ' ').toUpperCase()
+        );
+
+        // Adicionar tabela
+        autoTable(doc, {
+          head: [headers],
+          body: tableData,
+          startY: 35,
+          styles: {
+            fontSize: 10,
+            cellPadding: 3,
+          },
+          headStyles: {
+            fillColor: [66, 139, 202],
+            textColor: 255,
+            fontStyle: 'bold',
+          },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245],
+          },
         });
 
-      if (error) throw error;
+        // Salvar o PDF
+        doc.save(`relatorio_${tipoRelatorio}_${new Date().toISOString().split('T')[0]}.pdf`);
+      } else {
+        // Criar conteúdo CSV para Excel
+        const headers = Object.keys(reportData[0] || {}).join(',');
+        const rows = reportData.map(row => Object.values(row).join(','));
+        const csvContent = [headers, ...rows].join('\n');
+        
+        // Criar blob com o conteúdo CSV
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        
+        // Criar link de download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `relatorio_${tipoRelatorio}_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
 
       toast({
         title: "Relatório gerado com sucesso",
-        description: "O relatório será processado e disponibilizado em breve.",
+        description: "O download do relatório foi iniciado automaticamente.",
       });
     } catch (error: any) {
       toast({
